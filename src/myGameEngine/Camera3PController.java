@@ -47,7 +47,7 @@ public class Camera3PController {
 
     }
 
-    private void updateCameraPosition() {
+    public void updateCameraPosition() {
 
         double theta = Math.toRadians(cameraAzimuth); // rotation around target
         double phi = Math.toRadians(cameraElevation); // altitude angle

@@ -1,5 +1,6 @@
 package a2;
 
+import myGameEngine.Camera3PController;
 import myGameEngine.ToggleMountAction;
 import myGameEngine.movement.*;
 import net.java.games.input.Component;
@@ -51,6 +52,7 @@ public class MyGame extends VariableFrameRateGame {
 
 
     private InputManager inputManager;
+    private Camera3PController orbitController;
     private Camera camera;
     private SceneNode dolphinNode;
     private Action moveForwardAction, moveBackwardAction, moveLeftAction,
@@ -80,6 +82,8 @@ public class MyGame extends VariableFrameRateGame {
     protected void update(Engine engine) {
         renderSystem = (GL4RenderSystem) engine.getRenderSystem();
         elapsedTime += engine.getElapsedTimeMillis();
+
+        orbitController.updateCameraPosition();
 
         if (score_counter == 3 && trophiesCollected == 4) {
             displayString = "YOU BEAT THE GAME!!!";
@@ -225,8 +229,9 @@ public class MyGame extends VariableFrameRateGame {
         dolphinEntity.setPrimitive(Renderable.Primitive.TRIANGLES);
 
         dolphinNode = sceneManager.getRootSceneNode().createChildSceneNode(dolphinEntity.getName() + "Node");
-        dolphinNode.moveBackward(2.0f);
         dolphinNode.attachObject(dolphinEntity);
+
+        setupOrbitCamera(engine, sceneManager);
 
         // Adds the camera node to the dolphin node as a child.
         dolphinNode.attachChild(cameraNode);
@@ -358,6 +363,15 @@ public class MyGame extends VariableFrameRateGame {
         dolphinNode.attachChild(positionalLightNode);
 
         setupInputs(); // Setup the inputs
+    }
+
+    protected void setupOrbitCamera(Engine engine, SceneManager sceneManager) {
+        SceneNode dolphinNode = sceneManager.getSceneNode("DolphinNode");
+        SceneNode cameraNode = sceneManager.getSceneNode("MainCameraNode");
+
+        Camera camera1 = sceneManager.getCamera("MainCamera");
+        String gamepadName = inputManager.getFirstGamepadName();
+        orbitController = new Camera3PController(camera1, cameraNode, dolphinNode, gamepadName, inputManager);
     }
 
     @Override
@@ -538,7 +552,6 @@ public class MyGame extends VariableFrameRateGame {
 
         return saucer;
     }
-
 
     protected ManualObject pyramidShip(Engine engine, SceneManager sceneManager) throws IOException {
 
