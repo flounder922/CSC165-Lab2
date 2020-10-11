@@ -29,7 +29,6 @@ import java.io.IOException;
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
 import java.util.ArrayList;
-import java.util.List;
 
 public class MyGame extends VariableFrameRateGame {
 
@@ -56,9 +55,9 @@ public class MyGame extends VariableFrameRateGame {
     private SceneNode dolphinNode;
     private Action moveForwardAction, moveBackwardAction, moveLeftAction,
             moveRightAction, toggleMountAction, decreaseGlobalYawAction,
-            increaseGlobalYawAction, globalYawControllerAction, increaseLocalPitchAction,
-            decreaseLocalPitchAction, localPitchControllerAction, moveXAxisJoystickAction,
+            increaseGlobalYawAction, globalYawControllerAction, moveXAxisJoystickAction,
             moveYAxisJoystickAction;
+    // increaseLocalPitchAction,decreaseLocalPitchAction,localPitchControllerAction,
 
     public MyGame() {
         super();
@@ -382,9 +381,9 @@ public class MyGame extends VariableFrameRateGame {
         decreaseGlobalYawAction = new DecreaseGlobalYawAction(camera, dolphinNode);
         increaseGlobalYawAction = new IncreaseGlobalYawAction(camera, dolphinNode);
         globalYawControllerAction = new GlobalYawControllerAction(camera, dolphinNode);
-        increaseLocalPitchAction = new IncreaseLocalPitchAction(camera, dolphinNode);
-        decreaseLocalPitchAction = new DecreaseLocalPitchAction(camera, dolphinNode);
-        localPitchControllerAction = new LocalPitchControllerAction(camera, dolphinNode);
+        //increaseLocalPitchAction = new IncreaseLocalPitchAction(camera, dolphinNode);
+        //decreaseLocalPitchAction = new DecreaseLocalPitchAction(camera, dolphinNode);
+        //localPitchControllerAction = new LocalPitchControllerAction(camera, dolphinNode);
 
         for (Object controller : controllers) {
 
@@ -398,14 +397,14 @@ public class MyGame extends VariableFrameRateGame {
                 inputManager.associateAction(c, Component.Identifier.Key.SPACE, toggleMountAction, InputManager.INPUT_ACTION_TYPE.ON_PRESS_ONLY);
                 inputManager.associateAction(c, Component.Identifier.Key.LEFT, decreaseGlobalYawAction, InputManager.INPUT_ACTION_TYPE.REPEAT_WHILE_DOWN);
                 inputManager.associateAction(c, Component.Identifier.Key.RIGHT, increaseGlobalYawAction, InputManager.INPUT_ACTION_TYPE.REPEAT_WHILE_DOWN);
-                inputManager.associateAction(c, Component.Identifier.Key.UP, increaseLocalPitchAction, InputManager.INPUT_ACTION_TYPE.REPEAT_WHILE_DOWN);
-                inputManager.associateAction(c, Component.Identifier.Key.DOWN, decreaseLocalPitchAction, InputManager.INPUT_ACTION_TYPE.REPEAT_WHILE_DOWN);
+                //inputManager.associateAction(c, Component.Identifier.Key.UP, increaseLocalPitchAction, InputManager.INPUT_ACTION_TYPE.REPEAT_WHILE_DOWN);
+                //inputManager.associateAction(c, Component.Identifier.Key.DOWN, decreaseLocalPitchAction, InputManager.INPUT_ACTION_TYPE.REPEAT_WHILE_DOWN);
             } else if (c.getType() == Controller.Type.GAMEPAD || c.getType() == Controller.Type.STICK) {
                 inputManager.associateAction(c, Component.Identifier.Axis.X, moveXAxisJoystickAction, InputManager.INPUT_ACTION_TYPE.REPEAT_WHILE_DOWN);
                 inputManager.associateAction(c, Component.Identifier.Axis.Y, moveYAxisJoystickAction, InputManager.INPUT_ACTION_TYPE.REPEAT_WHILE_DOWN);
                 inputManager.associateAction(c, Component.Identifier.Button._5, toggleMountAction, InputManager.INPUT_ACTION_TYPE.ON_PRESS_ONLY);
                 inputManager.associateAction(c, Component.Identifier.Axis.RX, globalYawControllerAction, InputManager.INPUT_ACTION_TYPE.REPEAT_WHILE_DOWN);
-                inputManager.associateAction(c, Component.Identifier.Axis.RY, localPitchControllerAction, InputManager.INPUT_ACTION_TYPE.REPEAT_WHILE_DOWN);
+                //inputManager.associateAction(c, Component.Identifier.Axis.RY, localPitchControllerAction, InputManager.INPUT_ACTION_TYPE.REPEAT_WHILE_DOWN);
 
             }
         }
