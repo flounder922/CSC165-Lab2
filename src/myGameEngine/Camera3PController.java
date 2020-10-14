@@ -28,8 +28,7 @@ public class Camera3PController {
     private Vector3 targetPosition;
     private Vector3 worldUpVector;
 
-    public Camera3PController(Camera camera, SceneNode cameraNode, SceneNode target,
-                              String controllerName, InputManager inputManager) {
+    public Camera3PController(Camera camera, SceneNode cameraNode, SceneNode target) {
 
         this.camera = camera;
         this.cameraNode = cameraNode;
@@ -40,8 +39,6 @@ public class Camera3PController {
         radias = 2.0f;
 
         worldUpVector = Vector3f.createFrom(0.0f, 1.0f, 0.0f);
-
-        setupInput(inputManager, controllerName);
 
         updateCameraPosition();
 
@@ -62,7 +59,7 @@ public class Camera3PController {
         cameraNode.lookAt(target, worldUpVector);
     }
 
-    private void setupInput(InputManager inputManager, String controllerName) {
+    public void setupInput(InputManager inputManager, String controllerName) {
 
         Action orbitAroundAction = new OrbitAroundAction();
         Action orbitElevationAction = new OrbitElevationAction();
@@ -70,7 +67,7 @@ public class Camera3PController {
 
         inputManager.associateAction(controllerName, Component.Identifier.Axis.RX, orbitAroundAction, InputManager.INPUT_ACTION_TYPE.REPEAT_WHILE_DOWN);
         inputManager.associateAction(controllerName, Component.Identifier.Axis.RY, orbitElevationAction, InputManager.INPUT_ACTION_TYPE.REPEAT_WHILE_DOWN);
-        inputManager.associateAction(controllerName, Component.Identifier.Axis.X, orbitRadiasAction, InputManager.INPUT_ACTION_TYPE.REPEAT_WHILE_DOWN);
+        inputManager.associateAction(controllerName, Component.Identifier.Axis.Y, orbitRadiasAction, InputManager.INPUT_ACTION_TYPE.REPEAT_WHILE_DOWN);
     }
 
     private class OrbitAroundAction extends AbstractInputAction {
@@ -79,7 +76,7 @@ public class Camera3PController {
 
             float rotationAmount;
 
-            if (event.getValue() < -0.2)
+            if (event.getValue() < -0.2f)
                 rotationAmount = -0.2f;
             else if (event.getValue() > 0.2f)
                 rotationAmount = 0.2f;
@@ -98,15 +95,19 @@ public class Camera3PController {
 
             float rotationAmount;
 
-            if (event.getValue() < -0.2)
-                rotationAmount = -0.2f;
+            if (event.getValue() < -0.2f)
+                rotationAmount = -0.08f;
             else if (event.getValue() > 0.2f)
-                rotationAmount = 0.2f;
+                rotationAmount = 0.08f;
             else
                 rotationAmount = 0.0f;
 
             radias += rotationAmount;
-            radias = radias % 360;
+            if(radias > 5)
+                radias = 5;
+            else if (radias < 1)
+                radias = 1;
+            //radias = radias % 10;
             updateCameraPosition();
         }
     }
@@ -117,7 +118,7 @@ public class Camera3PController {
 
             float rotationAmount;
 
-            if (event.getValue() < -0.2)
+            if (event.getValue() < -0.2f)
                 rotationAmount = -0.2f;
             else if (event.getValue() > 0.2f)
                 rotationAmount = 0.2f;
@@ -125,6 +126,10 @@ public class Camera3PController {
                 rotationAmount = 0.0f;
 
             cameraElevation += rotationAmount;
+            if(cameraElevation < 0)
+                cameraElevation = 0;
+            else if(cameraElevation > 180)
+                cameraElevation = 180;
             cameraElevation = cameraElevation % 360;
             updateCameraPosition();
         }
