@@ -1,6 +1,7 @@
 package a2;
 
 import myGameEngine.Camera3PController;
+import myGameEngine.Movement3PController;
 import myGameEngine.ToggleMountAction;
 import myGameEngine.movement.*;
 import net.java.games.input.Component;
@@ -21,8 +22,8 @@ import ray.rage.rendersystem.states.FrontFaceState;
 import ray.rage.rendersystem.states.RenderState;
 import ray.rage.rendersystem.states.TextureState;
 import ray.rage.scene.*;
-import ray.rage.scene.controllers.RotationController;
 import ray.rage.util.BufferUtil;
+import ray.rml.Radianf;
 import ray.rml.Vector3;
 import ray.rml.Vector3f;
 
@@ -46,6 +47,7 @@ public class MyGame extends VariableFrameRateGame {
     private InputManager inputManager;
     private Camera camera;
     private Camera3PController orbitController;
+    private Movement3PController movement3PController;
     private Action moveForwardAction, moveBackwardAction, moveLeftAction,
             moveRightAction, toggleMountAction, decreaseGlobalYawAction,
             increaseGlobalYawAction, globalYawControllerAction, increaseLocalPitchAction,
@@ -98,22 +100,18 @@ public class MyGame extends VariableFrameRateGame {
     @Override
     protected void setupScene(Engine engine, SceneManager sceneManager) throws IOException {
 
-
         //Creates the dolphin and sets the render. Followed by the node creation and placement of the node in the world.
         // The entity is then attached to the node.
         SceneNode dolphinNode = createSceneNode(sceneManager,
-                "DolphinNode", "dolphinHighPoly.obj", Vector3f.createFrom(0.0f, 0.0f, 0.0f));
-
-        // Adds the camera node to the dolphin node as a child.
-        dolphinNode.attachChild(sceneManager.getSceneNode("MainCameraNode"));
+                "DolphinNode", "dolphinHighPoly.obj", Vector3f.createFrom(0.0f, 0.31f, 0.0f));
 
         setupOrbitCamera(engine, sceneManager);
-
+        setupMovement(sceneManager);
 
         // Creates planet 1 and sets the render. Followed by the node creation and placement of the node in the world.
         // The entity is then attached to the node.
         SceneNode earthNode = createSceneNode(sceneManager,
-                "EarthNode", "earth.obj", Vector3f.createFrom(-50.0f, 1.0f, -8.0f));
+                "EarthNode", "earth.obj", Vector3f.createFrom(-50.0f, 3.0f, -8.0f));
         earthNode.setLocalScale(1.5f, 1.5f, 1.5f);
 
         // Creates planet 2 and sets the render. Followed by the node creation and placement of the node in the world.
@@ -125,7 +123,7 @@ public class MyGame extends VariableFrameRateGame {
         // Creates planet 3 and sets the render. Followed by the node creation and placement of the node in the world.
         // The entity is then attached to the node.
         SceneNode RedPlanetNode = createSceneNode(sceneManager,
-                "RedPlanetNode","planet3.obj", Vector3f.createFrom(3.0f, 0.0f, -30.0f));
+                "RedPlanetNode","planet3.obj", Vector3f.createFrom(3.0f, 2.0f, -30.0f));
         RedPlanetNode.scale(2.0f, 2.0f, 2.0f);
 
         // Create a pyramid ship manual object
@@ -134,9 +132,21 @@ public class MyGame extends VariableFrameRateGame {
         pyramidShipNode.attachObject(pyramidShip);
         pyramidShipNode.setLocalPosition(5.0f, 7.0f, 8.0f);
 
+        ManualObject floor = floor(engine, sceneManager);
+        SceneNode floorNode = sceneManager.getRootSceneNode().createChildSceneNode("floorNode");
+        floorNode.attachObject(floor);
+        floorNode.roll(Radianf.createFrom((float) Math.toRadians(180)));
+        floorNode.scale(100.0f, 100.0f, 100.0f);
+
+        ManualObject floor2 = floor2(engine, sceneManager);
+        SceneNode floor2Node = sceneManager.getRootSceneNode().createChildSceneNode("floor2Node");
+        floor2Node.attachObject(floor2);
+        floor2Node.roll(Radianf.createFrom((float) Math.toRadians(180)));
+        floor2Node.rotate(Radianf.createFrom((float) Math.toRadians(180)), Vector3f.createFrom(0.0f,1.0f,0.0f));
+        floor2Node.scale(100.0f, 100.0f, 100.0f);
+
         // Gets the ambient light and sets its intensity for the scene.
         sceneManager.getAmbientLight().setIntensity(new Color(0.1f, 0.1f, 0.1f));
-
 
         // Create a spot light
         Light positionalLight = sceneManager.createLight("PositionalLight", Light.Type.SPOT);
@@ -166,6 +176,11 @@ public class MyGame extends VariableFrameRateGame {
         orbitController = new Camera3PController(camera, cameraNode, dolphinNode);
     }
 
+    protected void setupMovement(SceneManager sceneManager) {
+        SceneNode dolphinNode = sceneManager.getSceneNode("DolphinNode");
+        movement3PController = new Movement3PController(dolphinNode);
+    }
+
     protected void setupInputs(SceneManager sceneManager) {
         inputManager = new GenericInputManager();
         ArrayList controllers = inputManager.getControllers();
@@ -190,16 +205,10 @@ public class MyGame extends VariableFrameRateGame {
             Controller c = (Controller) controller;
 
             if (c.getType() == Controller.Type.KEYBOARD) {
-                inputManager.associateAction(c, Component.Identifier.Key.W, moveForwardAction, InputManager.INPUT_ACTION_TYPE.REPEAT_WHILE_DOWN);
-                inputManager.associateAction(c, Component.Identifier.Key.S, moveBackwardAction, InputManager.INPUT_ACTION_TYPE.REPEAT_WHILE_DOWN);
-                inputManager.associateAction(c, Component.Identifier.Key.A, moveLeftAction, InputManager.INPUT_ACTION_TYPE.REPEAT_WHILE_DOWN);
-                inputManager.associateAction(c, Component.Identifier.Key.D, moveRightAction, InputManager.INPUT_ACTION_TYPE.REPEAT_WHILE_DOWN);
-                inputManager.associateAction(c, Component.Identifier.Key.LEFT, decreaseGlobalYawAction, InputManager.INPUT_ACTION_TYPE.REPEAT_WHILE_DOWN);
-                inputManager.associateAction(c, Component.Identifier.Key.RIGHT, increaseGlobalYawAction, InputManager.INPUT_ACTION_TYPE.REPEAT_WHILE_DOWN);
-                inputManager.associateAction(c, Component.Identifier.Key.UP, increaseLocalPitchAction, InputManager.INPUT_ACTION_TYPE.REPEAT_WHILE_DOWN);
-                inputManager.associateAction(c, Component.Identifier.Key.DOWN, decreaseLocalPitchAction, InputManager.INPUT_ACTION_TYPE.REPEAT_WHILE_DOWN);
+
             } else if (c.getType() == Controller.Type.GAMEPAD || c.getType() == Controller.Type.STICK) {
                 orbitController.setupInput(inputManager, c.getName());
+                movement3PController.setupInput(inputManager, c.getName());
 
             }
         }
@@ -274,89 +283,109 @@ public class MyGame extends VariableFrameRateGame {
 
         return pyramidShip;
     }
+
+    protected ManualObject floor(Engine engine, SceneManager sceneManager) throws IOException {
+
+        ManualObject floor = sceneManager.createManualObject("floor");
+        ManualObjectSection floorSection  = floor.createManualSection("floorSection");
+
+        floor.setGpuShaderProgram(sceneManager.getRenderSystem().getGpuShaderProgram(GpuShaderProgram.Type.RENDERING));
+
+        float[] vertices = new float[] {
+                1.0f,0.0f,1.0f,     -1.0f,0.0f,-1.0f,   1.0f,0.0f,-1.0f
+
+        };
+
+        float [] textureCoordinates = new float[] {
+                0.0f,0.0f,      0.5f,1.0f,      1.0f,0.0f
+        };
+
+        float[] normals = new float[] {
+                0.0f,1.0f,0.0f,    0.0f,1.0f,0.0f,    0.0f,1.0f,0.0f
+        };
+
+        int[] indices = new int[] {0,1,2};
+
+        FloatBuffer verticesBuffer = BufferUtil.directFloatBuffer(vertices);
+        FloatBuffer textureBuffer = BufferUtil.directFloatBuffer(textureCoordinates);
+        FloatBuffer normalsBuffer = BufferUtil.directFloatBuffer(normals);
+        IntBuffer indexBuffer = BufferUtil.directIntBuffer(indices);
+
+        floorSection.setVertexBuffer(verticesBuffer);
+        floorSection.setTextureCoordsBuffer(textureBuffer);
+        floorSection.setNormalsBuffer(normalsBuffer);
+        floorSection.setIndexBuffer(indexBuffer);
+
+        Texture texture = engine.getTextureManager().getAssetByPath("blue.jpeg");
+        TextureState textureState = (TextureState)
+                sceneManager.getRenderSystem().createRenderState(RenderState.Type.TEXTURE);
+
+        textureState.setTexture(texture);
+
+        FrontFaceState faceState =  (FrontFaceState)
+                sceneManager.getRenderSystem().createRenderState(RenderState.Type.FRONT_FACE);
+
+        floor.setDataSource(Renderable.DataSource.INDEX_BUFFER);
+        floor.setRenderState(textureState);
+        floor.setRenderState(faceState);
+
+        return floor;
+    }
+
+    protected ManualObject floor2(Engine engine, SceneManager sceneManager) throws IOException {
+
+        ManualObject floor2 = sceneManager.createManualObject("floor2");
+        ManualObjectSection floorSection  = floor2.createManualSection("floor2Section");
+
+        floor2.setGpuShaderProgram(sceneManager.getRenderSystem().getGpuShaderProgram(GpuShaderProgram.Type.RENDERING));
+
+        float[] vertices = new float[] {
+                1.0f,0.0f,1.0f,     -1.0f,0.0f,-1.0f,   1.0f,0.0f,-1.0f
+
+        };
+
+        float [] textureCoordinates = new float[] {
+                0.0f,0.0f,      0.5f,1.0f,      1.0f,0.0f
+        };
+
+        float[] normals = new float[] {
+                0.0f,1.0f,0.0f,    0.0f,1.0f,0.0f,    0.0f,1.0f,0.0f
+        };
+
+        int[] indices = new int[] {0,1,2};
+
+        FloatBuffer verticesBuffer = BufferUtil.directFloatBuffer(vertices);
+        FloatBuffer textureBuffer = BufferUtil.directFloatBuffer(textureCoordinates);
+        FloatBuffer normalsBuffer = BufferUtil.directFloatBuffer(normals);
+        IntBuffer indexBuffer = BufferUtil.directIntBuffer(indices);
+
+        floorSection.setVertexBuffer(verticesBuffer);
+        floorSection.setTextureCoordsBuffer(textureBuffer);
+        floorSection.setNormalsBuffer(normalsBuffer);
+        floorSection.setIndexBuffer(indexBuffer);
+
+        Texture texture = engine.getTextureManager().getAssetByPath("blue.jpeg");
+        TextureState textureState = (TextureState)
+                sceneManager.getRenderSystem().createRenderState(RenderState.Type.TEXTURE);
+
+        textureState.setTexture(texture);
+
+        FrontFaceState faceState =  (FrontFaceState)
+                sceneManager.getRenderSystem().createRenderState(RenderState.Type.FRONT_FACE);
+
+        floor2.setDataSource(Renderable.DataSource.INDEX_BUFFER);
+        floor2.setRenderState(textureState);
+        floor2.setRenderState(faceState);
+
+        return floor2;
+    }
 }
 
 
 /*
-
 public class MyGame extends VariableFrameRateGame {
 
     //private Movement3PController movement3PController;
-
-    @Override
-    protected void setupScene(Engine engine, SceneManager sceneManager) throws IOException {
-
-        //Creates the dolphin and sets the render.
-        //Followed by the node creation and placement of the node in the world.
-        //The entity is then attached to the node.
-
-        Entity dolphinEntity = sceneManager.createEntity("Dolphin", "dolphinHighPoly.obj");
-        dolphinEntity.setPrimitive(Renderable.Primitive.TRIANGLES);
-
-        SceneNode dolphinNode = sceneManager.getRootSceneNode().createChildSceneNode(dolphinEntity.getName() + "Node");
-        dolphinNode.attachObject(dolphinEntity);
-
-        setupOrbitCamera(engine, sceneManager);
-
-
-            //Creates planet 1 and sets the render.
-            //Followed by the node creation and placement of the node in the world.
-            //The entity is then attached to the node.
-
-        //SceneNode earthNode = createPlanet(sceneManager, "Earth", "earth.obj", Vector3f.createFrom(-50.0f, 1.0f, -8.0f));
-        //earthNode.setLocalScale(1.5f, 1.5f, 1.5f);
-
-
-            Creates planet 2 and sets the render.
-            Followed by the node creation and placement of the node in the world.
-            The entity is then attached to the node.
-
-        //SceneNode moonNode = createPlanet(sceneManager, "Moon", "planet2.obj", Vector3f.createFrom(25.0f, 1.0f, 14.0f));
-        //moonNode.scale(1.0f, 1.0f, 1.0f);
-
-
-            //Creates planet 3 and sets the render.
-            //Followed by the node creation and placement of the node in the world.
-            //The entity is then attached to the node.
-        //SceneNode RedPlanetNode = createPlanet(sceneManager, "RedPlanet", "planet3.obj", Vector3f.createFrom(3.0f, 1.0f, -30.0f));
-        //RedPlanetNode.scale(2.0f, 2.0f, 2.0f);
-
-        // Create a pyramid ship manual object
-        //ManualObject pyramidShip = pyramidShip(engine, sceneManager);
-        //SceneNode pyramidShipNode = sceneManager.getRootSceneNode().createChildSceneNode("PyramidShipNode");
-        //pyramidShipNode.attachObject(pyramidShip);
-        //pyramidShipNode.setLocalPosition(5.0f, 7.0f, 8.0f);
-
-        // Gets the ambient light and sets its intensity for the scene.
-        sceneManager.getAmbientLight().setIntensity(new Color(0.1f, 0.1f, 0.1f));
-
-        // Create a spot light
-        Light positionalLight = sceneManager.createLight("PositionalLight", Light.Type.SPOT);
-        positionalLight.setAmbient(new Color(0.5f, 0.5f, 0.5f));
-        positionalLight.setDiffuse(new Color(0.7f, 0.7f, 0.7f));
-        positionalLight.setSpecular(new Color(1.0f, 1.0f, 1.0f));
-        positionalLight.setRange(10f);
-
-        // Create the node for the light and attaches it to the dolphin node as a child.
-        SceneNode positionalLightNode = sceneManager.getRootSceneNode().createChildSceneNode(positionalLight.getName() + "Node");
-        positionalLightNode.attachObject(positionalLight);
-        dolphinNode.attachChild(positionalLightNode);
-
-        setupInputs(); // Setup the inputs
-    }
-
-    protected void setupOrbitCamera(Engine engine, SceneManager sceneManager) {
-        SceneNode dolphinNode = sceneManager.getSceneNode("DolphinNode");
-        SceneNode cameraNode = sceneManager.getSceneNode("MainCameraNode");
-        Camera camera = sceneManager.getCamera("MainCamera");
-        orbitController = new Camera3PController(camera, cameraNode, dolphinNode);
-    }
-
-    @Override
-    protected void setupWindow(RenderSystem renderSystem, GraphicsEnvironment graphicsEnvironment) {
-        // Defines the window size of the game and make it so it is NOT in exclusive fullscreen.
-        renderSystem.createRenderWindow(new DisplayMode(1000, 700, 24, 60), false);
-    }
 
     protected void setupInputs() {
         inputManager = new GenericInputManager();
@@ -385,79 +414,5 @@ public class MyGame extends VariableFrameRateGame {
             }
         }
     }
-
-
-    protected SceneNode createSceneNode(SceneManager sceneManager, String planetName,
-                                     String nameOfOBJFile, Vector3 spawnLocation) throws IOException {
-
-        Entity entity = sceneManager.createEntity(planetName, nameOfOBJFile);
-        entity.setPrimitive(Renderable.Primitive.TRIANGLES);
-
-        SceneNode planetNode = sceneManager.getRootSceneNode().createChildSceneNode(planetName + "Node");
-        planetNode.attachObject(entity);
-        planetNode.setLocalPosition(spawnLocation);
-
-        return planetNode;
-    }
-
-
-
-    protected ManualObject pyramidShip(Engine engine, SceneManager sceneManager) throws IOException {
-
-        ManualObject pyramidShip = sceneManager.createManualObject("PyramidShip");
-        ManualObjectSection pyramidShipSelection = pyramidShip.createManualSection("PyramidShipSection");
-
-        pyramidShip.setGpuShaderProgram(
-                sceneManager.getRenderSystem().getGpuShaderProgram(GpuShaderProgram.Type.RENDERING));
-
-        float[] vertices = new float[] {
-                -1.0f,0.0f,1.0f,    2.0f,0.0f,0.0f,     0.0f,0.5f,0.0f,     // Left
-                2.0f,0.0f,0.0f,     -1.0f,0.0f,-1.0f,    0.0f,0.5f,0.0f,    // Right
-                -1.0f,0.0f,-1.0f,   -1.0f,0.0f,1.0f,    0.0f,0.5f,0.0f,     // Back
-                -1.0f,0.0f,-1.0f,   2.0f,0.0f,0.0f,     -1.0f,0.0f,1.0f,    // Bottom
-        };
-
-        float[] textureCoordinates = new float[] {
-                1.0f,1.0f,  0.0f,0.0f,  1.0f, 0.0f, // Left
-                1.0f,1.0f,  0.0f,0.0f,  1.0f, 0.0f, // Right
-                0.0f,0.0f,  1.0f,0.0f,  0.5f,1.0f,  // Back
-                0.0f,0.0f,  1.0f,1.0f,  0.0f,1.0f,  // Bottom
-        };
-
-        float[] normals = new float[] {
-                0.0f,1.0f,1.0f,     0.0f,1.0f,1.0f,     0.0f,1.0f,1.0f,     // Left
-                1.0f, 1.0f,0.0f,    1.0f,1.0f,0.0f,     1.0f,1.0f,0.0f,     // Right
-                -1.0f,1.0f,0.0f,    -1.0f,1.0f,0.0f,    -1.0f,1.0f,0.0f,    // Back
-                0.0f,-1.0f,0.0f,    0.0f,-1.0f,0.0f,    0.0f,-1.0f,0.0f,    // Bottom
-        };
-
-        int[] indices = new int[] {0,1,2,3,4,5,6,7,8,9,10,11};
-
-        FloatBuffer verticesBuffer = BufferUtil.directFloatBuffer(vertices);
-        FloatBuffer textureBuffer = BufferUtil.directFloatBuffer(textureCoordinates);
-        FloatBuffer normalsBuffer = BufferUtil.directFloatBuffer(normals);
-        IntBuffer indexBuffer = BufferUtil.directIntBuffer(indices);
-
-        pyramidShipSelection.setVertexBuffer(verticesBuffer);
-        pyramidShipSelection.setTextureCoordsBuffer(textureBuffer);
-        pyramidShipSelection.setNormalsBuffer(normalsBuffer);
-        pyramidShipSelection.setIndexBuffer(indexBuffer);
-
-        Texture texture = engine.getTextureManager().getAssetByPath("hexagons.jpeg");
-        TextureState textureState = (TextureState)
-                sceneManager.getRenderSystem().createRenderState(RenderState.Type.TEXTURE);
-
-        textureState.setTexture(texture);
-
-        FrontFaceState faceState =  (FrontFaceState)
-                sceneManager.getRenderSystem().createRenderState(RenderState.Type.FRONT_FACE);
-
-        pyramidShip.setDataSource(Renderable.DataSource.INDEX_BUFFER);
-        pyramidShip.setRenderState(textureState);
-        pyramidShip.setRenderState(faceState);
-
-        return pyramidShip;
-    }
 }
-
  */
