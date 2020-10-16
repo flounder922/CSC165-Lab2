@@ -1,9 +1,6 @@
 package a2;
 
-import myGameEngine.Camera3PController;
-import myGameEngine.Movement3PController;
-import myGameEngine.ToggleMountAction;
-import myGameEngine.movement.*;
+import myGameEngine.*;
 import net.java.games.input.Component;
 import net.java.games.input.Controller;
 import ray.input.GenericInputManager;
@@ -16,6 +13,7 @@ import ray.rage.game.VariableFrameRateGame;
 import ray.rage.rendersystem.RenderSystem;
 import ray.rage.rendersystem.RenderWindow;
 import ray.rage.rendersystem.Renderable;
+import ray.rage.rendersystem.Viewport;
 import ray.rage.rendersystem.gl4.GL4RenderSystem;
 import ray.rage.rendersystem.shader.GpuShaderProgram;
 import ray.rage.rendersystem.states.FrontFaceState;
@@ -46,13 +44,8 @@ public class MyGame extends VariableFrameRateGame {
 
     private InputManager inputManager;
     private Camera camera;
-    private Camera3PController orbitController;
-    private Movement3PController movement3PController;
-    private Action moveForwardAction, moveBackwardAction, moveLeftAction,
-            moveRightAction, toggleMountAction, decreaseGlobalYawAction,
-            increaseGlobalYawAction, globalYawControllerAction, increaseLocalPitchAction,
-            decreaseLocalPitchAction, localPitchControllerAction, moveXAxisJoystickAction,
-            moveYAxisJoystickAction;
+    private Camera3PController orbitController1, orbitController2;
+    private Movement3PController movement3PController1;
 
     public MyGame() {
         super();
@@ -88,13 +81,29 @@ public class MyGame extends VariableFrameRateGame {
 
     @Override
     protected void setupCameras(SceneManager sceneManager, RenderWindow renderWindow) {
-        camera = sceneManager.createCamera("MainCamera", Camera.Frustum.Projection.PERSPECTIVE); // Create Main Camera with perspective projection
+        // Creates the first players camera
+        camera = sceneManager.createCamera("MainCamera", Camera.Frustum.Projection.PERSPECTIVE);
+        // Adds the first players camera to the top viewport.
         renderWindow.getViewport(0).setCamera(camera);
 
         camera.setMode('n');
+        // Creates a new child node off of the root node.
+        SceneNode cameraNode = sceneManager.getRootSceneNode().createChildSceneNode(camera.getName() + "Node");
+        // Attaches the camera object to the camera node.
+        cameraNode.attachObject(camera);
 
-        SceneNode cameraNode = sceneManager.getRootSceneNode().createChildSceneNode(camera.getName() + "Node"); // Creates a new child node off of the root node.
-        cameraNode.attachObject(camera);  // Attaches the camera object to the camera node.
+        // Creates the second players camera
+        Camera camera2 = sceneManager.createCamera("MainCamera2", Camera.Frustum.Projection.PERSPECTIVE);
+        // Adds the second players camera to the bottom viewport.
+        renderWindow.getViewport(1).setCamera(camera2);
+        camera2.setMode('n');
+        // Creates a new child node off of the root node.
+        SceneNode camera2Node = sceneManager.getRootSceneNode().createChildSceneNode(camera2.getName() + "Node");
+        // Attaches the camera2 object to the camera2 node.
+        camera2Node.attachObject(camera2);
+
+        camera2.getFrustum().setFarClipDistance(1000.0f);
+
     }
 
     @Override
@@ -103,7 +112,10 @@ public class MyGame extends VariableFrameRateGame {
         //Creates the dolphin and sets the render. Followed by the node creation and placement of the node in the world.
         // The entity is then attached to the node.
         SceneNode dolphinNode = createSceneNode(sceneManager,
-                "DolphinNode", "dolphinHighPoly.obj", Vector3f.createFrom(0.0f, 0.31f, 0.0f));
+                "DolphinNode", "dolphinHighPoly.obj", Vector3f.createFrom(-1.0f, 0.31f, 0.0f));
+
+        SceneNode dolphinNode2 = createSceneNode(sceneManager,
+                "DolphinNode2", "dolphinHighPoly.obj", Vector3f.createFrom(1.0f, 0.31f, 0.0f));
 
         setupOrbitCamera(engine, sceneManager);
         setupMovement(sceneManager);
@@ -169,47 +181,58 @@ public class MyGame extends VariableFrameRateGame {
         renderSystem.createRenderWindow(new DisplayMode(1000, 700, 24, 60), false);
     }
 
+    @Override
+    protected void setupWindowViewports(RenderWindow renderWindow) {
+        renderWindow.addKeyListener(this);
+
+        Viewport topViewport = renderWindow.getViewport(0);
+        topViewport.setDimensions(0.51f, 0.01f, 0.99f, 0.49f);
+
+
+        Viewport bottomViewport = renderWindow.createViewport(0.01f, 0.01f, 0.99f, 0.49f);
+    }
+
     protected void setupOrbitCamera(Engine engine, SceneManager sceneManager) {
         SceneNode dolphinNode = sceneManager.getSceneNode("DolphinNode");
         SceneNode cameraNode = sceneManager.getSceneNode("MainCameraNode");
-        Camera camera = sceneManager.getCamera("MainCamera");
-        orbitController = new Camera3PController(camera, cameraNode, dolphinNode);
+        orbitController1 = new Camera3PController(cameraNode, dolphinNode);
+
+        SceneNode dolphinNode2 = sceneManager.getSceneNode("DolphinNode2");
+        SceneNode cameraNode2 = sceneManager.getSceneNode("MainCamera2Node");
+        orbitController2 = new Camera3PController(cameraNode2, dolphinNode2);
     }
 
     protected void setupMovement(SceneManager sceneManager) {
         SceneNode dolphinNode = sceneManager.getSceneNode("DolphinNode");
-        movement3PController = new Movement3PController(dolphinNode);
+        movement3PController1 = new Movement3PController(dolphinNode);
     }
 
     protected void setupInputs(SceneManager sceneManager) {
         inputManager = new GenericInputManager();
         ArrayList controllers = inputManager.getControllers();
 
+        Action moveForwardW = new ForwardThirdPersonAction(sceneManager.getSceneNode("MainCamera2Node"),
+                sceneManager.getSceneNode("DolphinNode2"), orbitController2);
+        Action moveBackwardS = new BackwardThirdPersonAction(sceneManager.getSceneNode("MainCamera2Node"),
+                sceneManager.getSceneNode("DolphinNode2"), orbitController2);
+        Action moveLeftA = new LeftThirdPersonAction(sceneManager.getSceneNode("MainCamera2Node"),
+                sceneManager.getSceneNode("DolphinNode2"), orbitController2);
+        Action moveRightD = new RightThirdPersonAction(sceneManager.getSceneNode("MainCamera2Node"),
+                sceneManager.getSceneNode("DolphinNode2"), orbitController2);
 
-        moveForwardAction = new MoveForwardAction(camera, sceneManager.getSceneNode("DolphinNode"));
-        moveBackwardAction = new MoveBackwardAction(camera, sceneManager.getSceneNode("DolphinNode"));
-        moveLeftAction = new MoveLeftAction(camera, sceneManager.getSceneNode("DolphinNode"));
-        moveRightAction = new MoveRightAction(camera, sceneManager.getSceneNode("DolphinNode"));
-        moveXAxisJoystickAction = new MoveXAxisJoystickAction(camera, sceneManager.getSceneNode("DolphinNode"));
-        moveYAxisJoystickAction = new MoveYAxisJoystickAction(camera, sceneManager.getSceneNode("DolphinNode"));
-        toggleMountAction = new ToggleMountAction(camera, sceneManager.getSceneNode("DolphinNode"));
-        decreaseGlobalYawAction = new DecreaseGlobalYawAction(camera, sceneManager.getSceneNode("DolphinNode"));
-        increaseGlobalYawAction = new IncreaseGlobalYawAction(camera, sceneManager.getSceneNode("DolphinNode"));
-        globalYawControllerAction = new GlobalYawControllerAction(camera, sceneManager.getSceneNode("DolphinNode"));
-        increaseLocalPitchAction = new IncreaseLocalPitchAction(camera, sceneManager.getSceneNode("DolphinNode"));
-        decreaseLocalPitchAction = new DecreaseLocalPitchAction(camera, sceneManager.getSceneNode("DolphinNode"));
-        localPitchControllerAction = new LocalPitchControllerAction(camera, sceneManager.getSceneNode("DolphinNode"));
 
         for (Object controller : controllers) {
-
             Controller c = (Controller) controller;
 
             if (c.getType() == Controller.Type.KEYBOARD) {
+                inputManager.associateAction(c, Component.Identifier.Key.W, moveForwardW, InputManager.INPUT_ACTION_TYPE.REPEAT_WHILE_DOWN);
+                inputManager.associateAction(c, Component.Identifier.Key.S, moveBackwardS, InputManager.INPUT_ACTION_TYPE.REPEAT_WHILE_DOWN);
+                inputManager.associateAction(c, Component.Identifier.Key.A, moveLeftA, InputManager.INPUT_ACTION_TYPE.REPEAT_WHILE_DOWN);
+                inputManager.associateAction(c, Component.Identifier.Key.D, moveRightD, InputManager.INPUT_ACTION_TYPE.REPEAT_WHILE_DOWN);
 
             } else if (c.getType() == Controller.Type.GAMEPAD || c.getType() == Controller.Type.STICK) {
-                orbitController.setupInput(inputManager, c.getName());
-                movement3PController.setupInput(inputManager, c.getName());
-
+                orbitController1.setupInput(inputManager, c.getName());
+                movement3PController1.setupInput(inputManager, c.getName());
             }
         }
     }

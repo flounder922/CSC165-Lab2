@@ -5,16 +5,13 @@ import net.java.games.input.Event;
 import ray.input.InputManager;
 import ray.input.action.AbstractInputAction;
 import ray.input.action.Action;
-import ray.rage.scene.Camera;
 import ray.rage.scene.SceneNode;
 import ray.rml.Vector3;
 import ray.rml.Vector3f;
 
 public class Camera3PController {
 
-    // Camera and camera node that are being controlled.
-    private Camera camera;
-    private SceneNode cameraNode;
+    private final SceneNode cameraNode;
 
     // The target that the camera is looking at.
     private SceneNode target;
@@ -26,11 +23,11 @@ public class Camera3PController {
 
     // The targets position in the world and up in the world.
     private Vector3 targetPosition;
-    private Vector3 worldUpVector;
+    private final Vector3 worldUpVector;
 
-    public Camera3PController(Camera camera, SceneNode cameraNode, SceneNode target) {
+    public Camera3PController(SceneNode cameraNode, SceneNode target) {
 
-        this.camera = camera;
+        // Camera and camera node that are being controlled.
         this.cameraNode = cameraNode;
         this.target = target;
 
@@ -40,11 +37,11 @@ public class Camera3PController {
 
         worldUpVector = Vector3f.createFrom(0.0f, 1.0f, 0.0f);
 
-        updateCameraPosition();
+        updateCameraPosition(cameraNode, target);
 
     }
 
-    public void updateCameraPosition() {
+    public void updateCameraPosition(SceneNode cameraNode, SceneNode target) {
 
         double theta = Math.toRadians(cameraAzimuth); // rotation around target
         double phi = Math.toRadians(cameraElevation); // altitude angle
@@ -85,7 +82,7 @@ public class Camera3PController {
 
             cameraAzimuth += rotationAmount;
             cameraAzimuth = cameraAzimuth % 360;
-            updateCameraPosition();
+            updateCameraPosition(cameraNode, target);
         }
     }
 
@@ -108,7 +105,7 @@ public class Camera3PController {
             else if (radias < 1)
                 radias = 1;
             //radias = radias % 10;
-            updateCameraPosition();
+            updateCameraPosition(cameraNode, target);
         }
     }
 
@@ -131,7 +128,7 @@ public class Camera3PController {
             else if(cameraElevation > 180)
                 cameraElevation = 180;
             cameraElevation = cameraElevation % 360;
-            updateCameraPosition();
+            updateCameraPosition(cameraNode, target);
         }
     }
 }
