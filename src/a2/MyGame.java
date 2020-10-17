@@ -1,6 +1,6 @@
 package a2;
 
-import myGameEngine.*;
+import myGameEngine.ThirdPersonCamera.*;
 import net.java.games.input.Component;
 import net.java.games.input.Controller;
 import ray.input.GenericInputManager;
@@ -144,12 +144,14 @@ public class MyGame extends VariableFrameRateGame {
         pyramidShipNode.attachObject(pyramidShip);
         pyramidShipNode.setLocalPosition(5.0f, 7.0f, 8.0f);
 
+        // Create a floor manual object, move it into place, and scale it to size
         ManualObject floor = floor(engine, sceneManager);
         SceneNode floorNode = sceneManager.getRootSceneNode().createChildSceneNode("floorNode");
         floorNode.attachObject(floor);
         floorNode.roll(Radianf.createFrom((float) Math.toRadians(180)));
         floorNode.scale(100.0f, 100.0f, 100.0f);
 
+        // Create the second floor manual object, move it into place, and scale it to size.
         ManualObject floor2 = floor2(engine, sceneManager);
         SceneNode floor2Node = sceneManager.getRootSceneNode().createChildSceneNode("floor2Node");
         floor2Node.attachObject(floor2);
@@ -211,24 +213,44 @@ public class MyGame extends VariableFrameRateGame {
         inputManager = new GenericInputManager();
         ArrayList controllers = inputManager.getControllers();
 
-        Action moveForwardW = new ForwardThirdPersonAction(sceneManager.getSceneNode("MainCamera2Node"),
-                sceneManager.getSceneNode("DolphinNode2"), orbitController2);
-        Action moveBackwardS = new BackwardThirdPersonAction(sceneManager.getSceneNode("MainCamera2Node"),
-                sceneManager.getSceneNode("DolphinNode2"), orbitController2);
-        Action moveLeftA = new LeftThirdPersonAction(sceneManager.getSceneNode("MainCamera2Node"),
-                sceneManager.getSceneNode("DolphinNode2"), orbitController2);
-        Action moveRightD = new RightThirdPersonAction(sceneManager.getSceneNode("MainCamera2Node"),
-                sceneManager.getSceneNode("DolphinNode2"), orbitController2);
+        Action moveForwardW = new ForwardThirdPersonAction(sceneManager.getSceneNode("DolphinNode2"), orbitController2);
+        Action moveBackwardS = new BackwardThirdPersonAction(sceneManager.getSceneNode("DolphinNode2"), orbitController2);
+        Action moveLeftA = new LeftThirdPersonAction(sceneManager.getSceneNode("DolphinNode2"), orbitController2);
+        Action moveRightD = new RightThirdPersonAction(sceneManager.getSceneNode("DolphinNode2"), orbitController2);
+
+        Action increaseElevation = new ThirdPersonElevationIncrease(sceneManager.getSceneNode("DolphinNode2"), orbitController2);
+        Action decreaseElevation = new ThirdPersonElevationDecrease(sceneManager.getSceneNode("DolphinNode2"), orbitController2);
+
+        Action orbitLeft = new ThirdPersonOrbitLeft(sceneManager.getSceneNode("DolphinNode2"), orbitController2);
+        Action orbitRight = new ThirdPersonOrbitRight(sceneManager.getSceneNode("DolphinNode2"), orbitController2);
+
+        Action radiasIncrease = new ThirdPersonRadiasIncrease(sceneManager.getSceneNode("DolphinNode2"), orbitController2);
+        Action radiasDecrease = new ThirdPersonRadiasDecrease(sceneManager.getSceneNode("DolphinNode2"), orbitController2);
+
 
 
         for (Object controller : controllers) {
             Controller c = (Controller) controller;
 
             if (c.getType() == Controller.Type.KEYBOARD) {
+                // Avatar movements
                 inputManager.associateAction(c, Component.Identifier.Key.W, moveForwardW, InputManager.INPUT_ACTION_TYPE.REPEAT_WHILE_DOWN);
                 inputManager.associateAction(c, Component.Identifier.Key.S, moveBackwardS, InputManager.INPUT_ACTION_TYPE.REPEAT_WHILE_DOWN);
                 inputManager.associateAction(c, Component.Identifier.Key.A, moveLeftA, InputManager.INPUT_ACTION_TYPE.REPEAT_WHILE_DOWN);
                 inputManager.associateAction(c, Component.Identifier.Key.D, moveRightD, InputManager.INPUT_ACTION_TYPE.REPEAT_WHILE_DOWN);
+
+                // Turn the dolphin
+
+
+
+                // Camera Movements
+                inputManager.associateAction(c, Component.Identifier.Key.UP, increaseElevation, InputManager.INPUT_ACTION_TYPE.REPEAT_WHILE_DOWN);
+                inputManager.associateAction(c, Component.Identifier.Key.DOWN, decreaseElevation, InputManager.INPUT_ACTION_TYPE.REPEAT_WHILE_DOWN);
+                inputManager.associateAction(c, Component.Identifier.Key.LEFT, orbitLeft, InputManager.INPUT_ACTION_TYPE.REPEAT_WHILE_DOWN);
+                inputManager.associateAction(c, Component.Identifier.Key.RIGHT, orbitRight, InputManager.INPUT_ACTION_TYPE.REPEAT_WHILE_DOWN);
+
+                inputManager.associateAction(c, Component.Identifier.Key.Z, radiasIncrease, InputManager.INPUT_ACTION_TYPE.REPEAT_WHILE_DOWN);
+                inputManager.associateAction(c, Component.Identifier.Key.X, radiasDecrease, InputManager.INPUT_ACTION_TYPE.REPEAT_WHILE_DOWN);
 
             } else if (c.getType() == Controller.Type.GAMEPAD || c.getType() == Controller.Type.STICK) {
                 orbitController1.setupInput(inputManager, c.getName());
@@ -403,39 +425,3 @@ public class MyGame extends VariableFrameRateGame {
         return floor2;
     }
 }
-
-
-/*
-public class MyGame extends VariableFrameRateGame {
-
-    //private Movement3PController movement3PController;
-
-    protected void setupInputs() {
-        inputManager = new GenericInputManager();
-        ArrayList controllers = inputManager.getControllers();
-
-
-
-
-
-        for (Object controller : controllers) {
-
-            Controller c = (Controller) controller;
-
-            if (c.getType() == Controller.Type.KEYBOARD) {
-                //inputManager.associateAction(c, Component.Identifier.Key.W, moveForwardAction, InputManager.INPUT_ACTION_TYPE.REPEAT_WHILE_DOWN);
-                //inputManager.associateAction(c, Component.Identifier.Key.S, moveBackwardAction, InputManager.INPUT_ACTION_TYPE.REPEAT_WHILE_DOWN);
-                //inputManager.associateAction(c, Component.Identifier.Key.A, moveLeftAction, InputManager.INPUT_ACTION_TYPE.REPEAT_WHILE_DOWN);
-                //inputManager.associateAction(c, Component.Identifier.Key.D, moveRightAction, InputManager.INPUT_ACTION_TYPE.REPEAT_WHILE_DOWN);
-                //inputManager.associateAction(c, Component.Identifier.Key.SPACE, toggleMountAction, InputManager.INPUT_ACTION_TYPE.ON_PRESS_ONLY);
-                //inputManager.associateAction(c, Component.Identifier.Key.LEFT, decreaseGlobalYawAction, InputManager.INPUT_ACTION_TYPE.REPEAT_WHILE_DOWN);
-                //inputManager.associateAction(c, Component.Identifier.Key.RIGHT, increaseGlobalYawAction, InputManager.INPUT_ACTION_TYPE.REPEAT_WHILE_DOWN);
-            } else if (c.getType() == Controller.Type.GAMEPAD || c.getType() == Controller.Type.STICK) {
-                orbitController.setupInput(inputManager, c.getName());
-                //inputManager.associateAction(c, Component.Identifier.Button._0, moveForwardAction, InputManager.INPUT_ACTION_TYPE.REPEAT_WHILE_DOWN);
-
-            }
-        }
-    }
-}
- */

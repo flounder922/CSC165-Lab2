@@ -1,4 +1,4 @@
-package myGameEngine;
+package myGameEngine.ThirdPersonCamera;
 
 import net.java.games.input.Component;
 import net.java.games.input.Event;
