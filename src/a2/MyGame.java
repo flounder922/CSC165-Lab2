@@ -20,6 +20,8 @@ import ray.rage.rendersystem.states.FrontFaceState;
 import ray.rage.rendersystem.states.RenderState;
 import ray.rage.rendersystem.states.TextureState;
 import ray.rage.scene.*;
+import ray.rage.scene.controllers.RotationController;
+import ray.rage.scene.controllers.WaypointController;
 import ray.rage.util.BufferUtil;
 import ray.rml.Radianf;
 import ray.rml.Vector3;
@@ -35,17 +37,28 @@ public class MyGame extends VariableFrameRateGame {
 
     private GL4RenderSystem renderSystem; // render system for the game, is defined each update.
     private float elapsedTime = 0.0f;  // Used to keep track of how long the game has been running.
-    private String displayString; // Used to display the information on the HUD.
+    private String displayStringPlayerOne; // Used to display the information on the HUD.
+    private String displayStringPlayerTwo;
 
 
-    private int score_counter = 0;
+    private int scoreCounterPlayerOne = 0;
+    private int scoreCounterPlayerTwo = 0;
+    private int planetsVisited = 0;
 
+    private boolean earthVisited = false;
+    private boolean redVisited = false;
+    private boolean moonVisited = false;
 
 
     private InputManager inputManager;
-    private Camera camera;
     private Camera3PController orbitController1, orbitController2;
     private Movement3PController movement3PController1;
+    private PlayerOneNodeController playerOneNodeControllerEarth;
+    private PlayerOneNodeController playerOneNodeControllerRed;
+    private PlayerOneNodeController playerOneNodeControllerMoon;
+    private PlayerTwoNodeController playerTwoNodeController;
+    private RotationController solarSystemNodeController;
+
 
     public MyGame() {
         super();
@@ -69,20 +82,116 @@ public class MyGame extends VariableFrameRateGame {
         renderSystem = (GL4RenderSystem) engine.getRenderSystem();
         elapsedTime += engine.getElapsedTimeMillis();
 
-        if (score_counter == 3) {
-            displayString = "YOU BEAT THE GAME!!!";
+        SceneNode player1 = engine.getSceneManager().getSceneNode("DolphinNode");
+        SceneNode player2 = engine.getSceneManager().getSceneNode("DolphinNode2");
+
+        SceneNode earth = engine.getSceneManager().getSceneNode("EarthNode");
+        SceneNode red = engine.getSceneManager().getSceneNode("RedPlanetNode");
+        SceneNode moon = engine.getSceneManager().getSceneNode("MoonNode");
+
+        checkIfPlayerVisitedPlanet(player1, earth);
+        checkIfPlayerVisitedPlanet(player1, red);
+        checkIfPlayerVisitedPlanet(player1, moon);
+
+        checkIfPlayerVisitedPlanet(player2, earth);
+        checkIfPlayerVisitedPlanet(player2, red);
+        checkIfPlayerVisitedPlanet(player2, moon);
+
+        if (planetsVisited == 3) {
+            if(scoreCounterPlayerOne > scoreCounterPlayerTwo) {
+                displayStringPlayerOne = "You are the winner!!!";
+                solarSystemNodeController.addNode(engine.getSceneManager().getSceneNode("SolarSystemNode"));
+            }
+            else if (scoreCounterPlayerTwo > scoreCounterPlayerOne) {
+                displayStringPlayerTwo = "You are the winner!!!";
+                solarSystemNodeController.addNode(engine.getSceneManager().getSceneNode("SolarSystemNode"));
+            }
+
+
         } else {
-            displayString = "Planets Visited: " + score_counter + "  Trophies: ";
+            displayStringPlayerOne = "Planets Visited: " + scoreCounterPlayerOne;
+            displayStringPlayerTwo = "Planets Visited: " + scoreCounterPlayerTwo;
+
         }
 
-        renderSystem.setHUD(displayString, 10, 10);
+        renderSystem.setHUD(displayStringPlayerOne, renderSystem.getRenderWindow().getViewport(0).getActualLeft(), renderSystem.getRenderWindow().getViewport(0).getActualBottom() + 5);
+        renderSystem.setHUD2(displayStringPlayerTwo, renderSystem.getRenderWindow().getViewport(0).getActualLeft(), renderSystem.getRenderWindow().getViewport(1).getActualBottom() + 5);
+
+        playerOneNodeControllerEarth.updateImpl(elapsedTime);
+        playerOneNodeControllerMoon.updateImpl(elapsedTime);
+        playerOneNodeControllerRed.updateImpl(elapsedTime);
+        playerTwoNodeController.updateImpl(elapsedTime);
         inputManager.update(elapsedTime);
+
+    }
+
+    protected void checkIfPlayerVisitedPlanet(SceneNode playerNode, SceneNode planetNode) {
+        Vector3 playerPosition = playerNode.getWorldPosition();
+        Vector3 planetPosition = planetNode.getWorldPosition();
+
+        // Calculate the distance between the player and planet
+        float distanceFromPlanet = (float) Math.sqrt(
+                Math.pow(playerPosition.x() - planetPosition.x(), 2) +
+                        Math.pow(playerPosition.y() - planetPosition.y(), 2) +
+                        Math.pow(playerPosition.z() - planetPosition.z(), 2));
+
+
+        // Used when a player node is within 3 units to then let them gain points.
+        if (distanceFromPlanet <= 3) {
+            switch (planetNode.getName()) {
+                case "EarthNode":
+                    if (!earthVisited) {
+                        if (playerNode.getName() == "DolphinNode") {
+                            scoreCounterPlayerOne++;
+                            planetsVisited++;
+                            playerOneNodeControllerEarth.addNodeToWaypointController(planetNode);
+                            earthVisited = true;
+                        } else if (playerNode.getName() == "DolphinNode2") {
+                            scoreCounterPlayerTwo++;
+                            planetsVisited++;
+                            playerTwoNodeController.addNodeToController(planetNode);
+                            earthVisited = true;
+                        }
+                    }
+                    break;
+                case "RedPlanetNode":
+                    if (!redVisited) {
+                        if (playerNode.getName() == "DolphinNode") {
+                            scoreCounterPlayerOne++;
+                            planetsVisited++;
+                            playerOneNodeControllerRed.addNodeToWaypointController(planetNode);
+                            redVisited = true;
+                        } else if (playerNode.getName() == "DolphinNode2") {
+                            scoreCounterPlayerTwo++;
+                            planetsVisited++;
+                            playerTwoNodeController.addNodeToController(planetNode);
+                            redVisited = true;
+                        }
+                    }
+                    break;
+                case "MoonNode":
+                    if (!moonVisited) {
+                        if (playerNode.getName() == "DolphinNode") {
+                            scoreCounterPlayerOne++;
+                            planetsVisited++;
+                            playerOneNodeControllerMoon.addNodeToWaypointController(planetNode);
+                            moonVisited = true;
+                        } else if (playerNode.getName() == "DolphinNode2") {
+                            scoreCounterPlayerTwo++;
+                            planetsVisited++;
+                            playerTwoNodeController.addNodeToController(planetNode);
+                            moonVisited = true;
+                        }
+                        break;
+                    }
+            }
+        }
     }
 
     @Override
     protected void setupCameras(SceneManager sceneManager, RenderWindow renderWindow) {
         // Creates the first players camera
-        camera = sceneManager.createCamera("MainCamera", Camera.Frustum.Projection.PERSPECTIVE);
+        Camera camera = sceneManager.createCamera("MainCamera", Camera.Frustum.Projection.PERSPECTIVE);
         // Adds the first players camera to the top viewport.
         renderWindow.getViewport(0).setCamera(camera);
 
@@ -134,9 +243,14 @@ public class MyGame extends VariableFrameRateGame {
 
         // Creates planet 3 and sets the render. Followed by the node creation and placement of the node in the world.
         // The entity is then attached to the node.
-        SceneNode RedPlanetNode = createSceneNode(sceneManager,
+        SceneNode redPlanetNode = createSceneNode(sceneManager,
                 "RedPlanetNode","planet3.obj", Vector3f.createFrom(3.0f, 2.0f, -30.0f));
-        RedPlanetNode.scale(2.0f, 2.0f, 2.0f);
+        redPlanetNode.scale(2.0f, 2.0f, 2.0f);
+
+        SceneNode solarSystemNode = sceneManager.getRootSceneNode().createChildSceneNode("SolarSystemNode");
+        solarSystemNode.attachChild(earthNode);
+        solarSystemNode.attachChild(redPlanetNode);
+        solarSystemNode.attachChild(moonNode);
 
         // Create a pyramid ship manual object
         ManualObject pyramidShip = pyramidShip(engine, sceneManager);
@@ -160,21 +274,45 @@ public class MyGame extends VariableFrameRateGame {
         floor2Node.scale(100.0f, 100.0f, 100.0f);
 
         // Gets the ambient light and sets its intensity for the scene.
-        sceneManager.getAmbientLight().setIntensity(new Color(0.1f, 0.1f, 0.1f));
+        sceneManager.getAmbientLight().setIntensity(new Color(0.2f, 0.2f, 0.2f));
 
         // Create a spot light
         Light positionalLight = sceneManager.createLight("PositionalLight", Light.Type.SPOT);
-        positionalLight.setAmbient(new Color(0.5f, 0.5f, 0.5f));
+        positionalLight.setAmbient(new Color(0.1f, 0.1f, 0.1f));
         positionalLight.setDiffuse(new Color(0.7f, 0.7f, 0.7f));
         positionalLight.setSpecular(new Color(1.0f, 1.0f, 1.0f));
         positionalLight.setRange(10f);
+
+        Light positionalLight2 = sceneManager.createLight("PositionalLight2", Light.Type.SPOT);
+        positionalLight2.setAmbient(new Color(0.1f, 0.1f, 0.1f));
+        positionalLight2.setDiffuse(new Color(0.7f, 0.7f, 0.7f));
+        positionalLight2.setSpecular(new Color(1.0f, 1.0f, 1.0f));
+        positionalLight2.setRange(10f);
 
         // Create the node for the light and attaches it to the dolphin node as a child.
         SceneNode positionalLightNode = sceneManager.getRootSceneNode().createChildSceneNode(positionalLight.getName() + "Node");
         positionalLightNode.attachObject(positionalLight);
         dolphinNode.attachChild(positionalLightNode);
 
+        SceneNode positionalLightNode2 = sceneManager.getRootSceneNode().createChildSceneNode(positionalLight2.getName() + "Node");
+        positionalLightNode2.attachObject(positionalLight2);
+        dolphinNode2.attachChild(positionalLightNode2);
+
         setupInputs(sceneManager); // Setup the inputs
+
+
+        playerOneNodeControllerEarth = new PlayerOneNodeController();
+        playerOneNodeControllerRed = new PlayerOneNodeController();
+        playerOneNodeControllerMoon = new PlayerOneNodeController();
+        playerTwoNodeController = new PlayerTwoNodeController();
+
+        solarSystemNodeController = new RotationController(Vector3f.createUnitVectorY(), 0.000006f);
+
+        sceneManager.addController(playerTwoNodeController);
+        sceneManager.addController(playerOneNodeControllerEarth);
+        sceneManager.addController(playerOneNodeControllerMoon);
+        sceneManager.addController(playerOneNodeControllerRed);
+        sceneManager.addController(solarSystemNodeController);
     }
 
     @Override
@@ -188,10 +326,12 @@ public class MyGame extends VariableFrameRateGame {
         renderWindow.addKeyListener(this);
 
         Viewport topViewport = renderWindow.getViewport(0);
-        topViewport.setDimensions(0.51f, 0.01f, 0.99f, 0.49f);
+        topViewport.setDimensions(0.51f, 0.0f, 1.0f, 0.49f);
+        topViewport.setClearColor(new Color(0.67f, 0.84f, 0.90f));
 
 
-        Viewport bottomViewport = renderWindow.createViewport(0.01f, 0.01f, 0.99f, 0.49f);
+        Viewport bottomViewport = renderWindow.createViewport(0.01f, 0.0f, 1.0f, 0.50f);
+        bottomViewport.setClearColor(new Color(0.67f, 0.84f, 0.90f));
     }
 
     protected void setupOrbitCamera(Engine engine, SceneManager sceneManager) {
