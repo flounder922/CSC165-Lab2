@@ -367,6 +367,9 @@ public class MyGame extends VariableFrameRateGame {
         Action radiasIncrease = new ThirdPersonRadiasIncrease(sceneManager.getSceneNode("DolphinNode2"), orbitController2);
         Action radiasDecrease = new ThirdPersonRadiasDecrease(sceneManager.getSceneNode("DolphinNode2"), orbitController2);
 
+        Action turnLeft = new TurnLeftThirdPersonAction(sceneManager.getSceneNode("DolphinNode2"));
+        Action turnRight = new TurnRightThirdPersonAction(sceneManager.getSceneNode("DolphinNode2"));
+
 
 
         for (Object controller : controllers) {
@@ -380,7 +383,8 @@ public class MyGame extends VariableFrameRateGame {
                 inputManager.associateAction(c, Component.Identifier.Key.D, moveRightD, InputManager.INPUT_ACTION_TYPE.REPEAT_WHILE_DOWN);
 
                 // Turn the dolphin
-
+                inputManager.associateAction(c, Component.Identifier.Key.Q, turnLeft, InputManager.INPUT_ACTION_TYPE.REPEAT_WHILE_DOWN);
+                inputManager.associateAction(c, Component.Identifier.Key.E, turnRight, InputManager.INPUT_ACTION_TYPE.REPEAT_WHILE_DOWN);
 
 
                 // Camera Movements

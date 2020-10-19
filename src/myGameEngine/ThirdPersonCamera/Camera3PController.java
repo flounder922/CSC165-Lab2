@@ -123,9 +123,9 @@ public class Camera3PController {
             float rotationAmount;
 
             if (event.getValue() < -0.2f)
-                rotationAmount = 0.5f;
-            else if (event.getValue() > 0.2f)
                 rotationAmount = -0.5f;
+            else if (event.getValue() > 0.2f)
+                rotationAmount = 0.5f;
             else
                 rotationAmount = 0.0f;
 
@@ -188,7 +188,7 @@ public class Camera3PController {
             float rotationAmount;
 
             if (event.getValue() == 1)
-                rotationAmount = -0.5f;
+                rotationAmount = 0.5f;
             else
                 rotationAmount = 0.0f;
 
@@ -205,7 +205,7 @@ public class Camera3PController {
             float rotationAmount;
 
             if (event.getValue() == 1)
-                rotationAmount = 0.5f;
+                rotationAmount = -0.5f;
             else
                 rotationAmount = 0.0f;
 
